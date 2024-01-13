@@ -1,0 +1,22 @@
+S: Sex
+	1. Male
+	2. Female
+
+A: Age
+	1. Under 15 years old
+	2. 15-64 years
+	3. 65 years and older
+
+R: Race
+        1. White alone
+        2. Black or African American alone
+        3. American Indian and Alaska Native alone
+        4. Asian alone
+        5. Native Hawaiian and Other Pacific Islander alone
+        6. Some Other Race Alone
+        7. Two or More Races
+
+HHI: Household income
+        1. Below $45,000
+        2. $45,000 to $150,000
+        2. Above $150,000
