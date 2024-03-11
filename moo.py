@@ -114,7 +114,7 @@ class MCLPE3(ElementwiseProblem):
 # user-defined parameters
 p = 100
 s = 1000
-t = 0.1
+t = 2
 
 # read data
 cook_centroids = gpd.read_file('data/cook_centroids_all.shp')
@@ -140,42 +140,51 @@ P = {
 
 
 # main
-for cov in [1, 2]:
-    # coverage
-    A = C[cov](n1, D)
+with open('data/runtime_pf.csv', 'w', newline='') as fw:
+    fw.write('cov,grp,prob,conv_gen,runtime\n')
+    fw.flush()
     
-    # attribute group
-    for g_idx, groups in enumerate(G):
-        n2 = len(groups)
-        W = cook_centroids[groups].to_numpy()
+    for cov in [1, 2]:
+        # coverage
+        A = C[cov](n1, D)
+        
+        # attribute group
+        for g_idx, groups in enumerate(G):
+            n2 = len(groups)
+            W = cook_centroids[groups].to_numpy()
 
-        # problem
-        for prob in [1, 2, 3]:
-            problem = P[prob](W, A, p)
+            # problem
+            for prob in [1, 2, 3]:
+                problem = P[prob](W, A, p)
 
-            print(C[cov], groups, P[prob])
+                print(C[cov], groups, P[prob])
 
-            algorithm = NSGA2(
-                pop_size=100,
-                sampling=BinaryRandomSampling(),
-                crossover=TwoPointCrossover(),
-                mutation=BitflipMutation(),
-                eliminate_duplicates=True
-            )
+                algorithm = NSGA2(
+                    pop_size=100,
+                    sampling=BinaryRandomSampling(),
+                    crossover=TwoPointCrossover(),
+                    mutation=BitflipMutation(),
+                    eliminate_duplicates=True
+                )
 
-            termination = get_termination("n_gen", 2000)
+                termination = get_termination("n_gen", 1000)
 
-            res = minimize(problem,
-                           algorithm,
-                           termination,
-                           seed=1,
-                           save_history=True,
-                           verbose=True)
-            print("Best solution found: %s" % res.X.astype(int))
-            print("Function value: %s" % res.F)
-            print("Constraint violation: %s" % res.CV)
+                res = minimize(problem,
+                            algorithm,
+                            termination,
+                            seed=1,
+                            save_history=True,
+                            verbose=True)
+                
+                # convergence
+                hist_cv_avg = []
+                for algo in res.history:
+                    hist_cv_avg.append(algo.pop.get("CV").mean())
+                k = np.where(np.array(hist_cv_avg) <= 0.0)[0].min()
 
-            filename1 = 'data/obj/F_cov' + str(cov) + '_grp' + str(g_idx) + '_prob' + str(prob) + '.pickle'
-            pickle.dump(res.F, open(filename1, "wb"))
-            filename2 = 'data/sols/X_cov' + str(cov) + '_grp' + str(g_idx) + '_prob' + str(prob) + '.pickle'
-            pickle.dump(res.X.astype(int), open(filename2, "wb"))
+                filename1 = 'data/obj/F_cov' + str(cov) + '_grp' + str(g_idx) + '_prob' + str(prob) + '.pickle'
+                pickle.dump(res.F, open(filename1, "wb"))
+                filename2 = 'data/sols/X_cov' + str(cov) + '_grp' + str(g_idx) + '_prob' + str(prob) + '.pickle'
+                pickle.dump(res.X.astype(int), open(filename2, "wb"))
+                fw.write(str(cov) + ',' + str(g_idx) + ',' + str(prob) + ',' + str(k) + ',' + str(res.exec_time) + '\n')
+                fw.flush()

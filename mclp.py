@@ -79,7 +79,7 @@ def inequality(x, W, A):
 # user-defined parameters
 p = 100
 s = 1000
-t = 0.1
+t = 2
 
 # read data
 cook_centroids = gpd.read_file('data/cook_centroids_all.shp')
@@ -118,7 +118,7 @@ for cov in [1, 2]:
             eliminate_duplicates=True
         )
 
-        termination = get_termination("n_gen", 2000)
+        termination = get_termination("n_gen", 1000)
 
         res = minimize(problem,
                         algorithm,
@@ -126,11 +126,18 @@ for cov in [1, 2]:
                         seed=1,
                         save_history=True,
                         verbose=True)
-        print("Best solution found: %s" % res.X.astype(int))
-        print("Function value: %s" % res.F)
-        print("Constraint violation: %s" % res.CV)
+        
+        # convergence
+        n_evals = [algo.evaluator.n_eval for algo in res.history]
+        hist_cv_avg = []
+        for algo in res.history:
+            opt = algo.opt
+            hist_cv_avg.append(algo.pop.get("CV").mean())
+            feas = np.where(opt.get("feasible"))[0]
+        k = np.where(np.array(hist_cv_avg) <= 0.0)[0].min()
+        print(f"Whole population feasible in Generation {k} after {n_evals[k]} evaluations.")
 
-        F = np.concatenate([[res.F], inequality(res.X.astype(int), W, A)])
+        F = np.concatenate([res.F, inequality(res.X.astype(int), W, A)])
 
         filename1 = 'data/obj/F_cov' + str(cov) + '_grp' + str(g_idx) + '.pickle'
         pickle.dump(F, open(filename1, "wb"))

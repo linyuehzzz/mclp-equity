@@ -144,7 +144,7 @@ def inequality(x, W, A):
 
 # user-defined parameters
 s = 1000
-t = 0.1
+t = 2
 
 # read data
 cook_centroids = gpd.read_file('data/cook_centroids_all.shp')
@@ -188,7 +188,7 @@ with open('data/runtime.csv', 'w', newline='') as fw:
             eliminate_duplicates=True
         )
 
-        termination = get_termination("n_gen", 2000)
+        termination = get_termination("n_gen", 1000)
 
         res = minimize(problem,
                         algorithm,
@@ -221,7 +221,7 @@ with open('data/runtime.csv', 'w', newline='') as fw:
                 eliminate_duplicates=True
             )
 
-            termination = get_termination("n_gen", 2000)
+            termination = get_termination("n_gen", 1000)
 
             res = minimize(problem,
                             algorithm,
